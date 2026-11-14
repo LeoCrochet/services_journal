@@ -145,37 +145,39 @@ def _remove_paragraph(paragraph):
     paragraph._element.getparent().remove(paragraph._element)
 
 
-def _fill_signature_line(paragraph, prefix, name, date_str, sig_pos_cm, date_pos_cm):
-    """Пересобрать строку подписи с табуляцией.
+def _find_label_paragraph(doc, data_paragraph):
+    """Найти следующую за строкой подписи строку-метку с «(подпись)»."""
+    found = False
+    for paragraph in doc.paragraphs:
+        if paragraph._p is data_paragraph._p:
+            found = True
+            continue
+        if found and "(подпись)" in paragraph.text:
+            return paragraph
+    return None
 
-    Подпись и дата привязываются к фиксированным позициям (tab stops),
-    поэтому не смещаются при разной длине ФИО.
+
+def _fill_signature_block(
+    data_paragraph,
+    label_paragraph,
+    prefix,
+    name,
+    label_text,
+    date_str,
+    name_pos_cm,
+    sig_pos_cm,
+    date_pos_cm,
+):
+    """Пересобрать строку подписи и строку-метку с общими tab stops.
+
+    Обе строки используют одинаковые позиции табуляции, поэтому
+    имя/подпись/дата в строке подписи точно совпадают с метками
+    «(ФИО…)», «(подпись)» и «(дата)» в строке-метке. Метка «(подпись)»
+    остаётся только в строке-метке, а над ней — подчёркнутое пустое
+    место для реальной подписи.
     """
-    base = paragraph.runs[0] if paragraph.runs else None
-    font_name = base.font.name if base is not None else None
-    font_size = base.font.size if base is not None else None
-    bold = base.font.bold if base is not None else None
 
-    for run in list(paragraph.runs):
-        run._element.getparent().remove(run._element)
-
-    pf = paragraph.paragraph_format
-    pf.tab_stops.clear_all()
-    pf.tab_stops.add_tab_stop(Cm(sig_pos_cm), WD_TAB_ALIGNMENT.CENTER)
-    pf.tab_stops.add_tab_stop(Cm(date_pos_cm), WD_TAB_ALIGNMENT.RIGHT)
-
-    segments = []
-    if prefix:
-        segments.append((prefix, False))
-    if name:
-        segments.append((name, True))
-    else:
-        segments.append(("________", False))
-    segments.append(("\t(подпись)", False))
-    segments.append(("\t", False))
-    segments.append((date_str, True))
-
-    for text, underline in segments:
+    def add(paragraph, text, underline, font_name, font_size, bold):
         run = paragraph.add_run(text)
         if font_name is not None:
             run.font.name = font_name
@@ -185,6 +187,52 @@ def _fill_signature_line(paragraph, prefix, name, date_str, sig_pos_cm, date_pos
             run.font.bold = bold
         if underline:
             run.underline = True
+        return run
+
+    def props(paragraph):
+        base = paragraph.runs[0] if paragraph.runs else None
+        return (
+            base.font.name if base is not None else None,
+            base.font.size if base is not None else None,
+            base.font.bold if base is not None else None,
+        )
+
+    data_font, data_size, data_bold = props(data_paragraph)
+    label_font, label_size, label_bold = props(label_paragraph)
+
+    for run in list(data_paragraph.runs):
+        run._element.getparent().remove(run._element)
+    for run in list(label_paragraph.runs):
+        run._element.getparent().remove(run._element)
+
+    for pf in (data_paragraph.paragraph_format, label_paragraph.paragraph_format):
+        pf.tab_stops.clear_all()
+        pf.tab_stops.add_tab_stop(Cm(name_pos_cm), WD_TAB_ALIGNMENT.LEFT)
+        pf.tab_stops.add_tab_stop(Cm(sig_pos_cm), WD_TAB_ALIGNMENT.CENTER)
+        pf.tab_stops.add_tab_stop(Cm(date_pos_cm), WD_TAB_ALIGNMENT.RIGHT)
+
+    # Строка подписи
+    if prefix:
+        add(data_paragraph, prefix, False, data_font, data_size, data_bold)
+    if name_pos_cm > 0:
+        add(data_paragraph, "\t", False, None, None, None)
+    if name:
+        add(data_paragraph, name, True, data_font, data_size, data_bold)
+    else:
+        add(data_paragraph, "________", False, data_font, data_size, data_bold)
+    add(data_paragraph, "\t", False, None, None, None)
+    add(data_paragraph, " " * 18, True, data_font, data_size, data_bold)
+    add(data_paragraph, "\t", False, None, None, None)
+    add(data_paragraph, date_str, True, data_font, data_size, data_bold)
+
+    # Строка-метка
+    if name_pos_cm > 0:
+        add(label_paragraph, "\t", False, None, None, None)
+    add(label_paragraph, label_text, False, label_font, label_size, label_bold)
+    add(label_paragraph, "\t", False, None, None, None)
+    add(label_paragraph, "(подпись)", False, label_font, label_size, label_bold)
+    add(label_paragraph, "\t", False, None, None, None)
+    add(label_paragraph, "(дата)", False, label_font, label_size, label_bold)
 
 
 def build_zayavka_docx(order):
@@ -259,22 +307,60 @@ def build_zayavka_docx(order):
         for p in doc.paragraphs
         if p.text.startswith("Заказчик:") and "(" in p.text
     )
-    _fill_signature_line(
-        customer_signature, "Заказчик: ", client.fio, today_str, 12, 17
+    _fill_signature_block(
+        customer_signature,
+        _find_label_paragraph(doc, customer_signature),
+        "Заказчик: ",
+        client.fio,
+        "(ФИО полностью)",
+        today_str,
+        name_pos_cm=3.5,
+        sig_pos_cm=11.5,
+        date_pos_cm=16.5,
     )
 
     accepted_by = next(
         p for p in doc.paragraphs if p.text.startswith("Заявку принял")
     )
-    _fill_signature_line(accepted_by, "Заявку принял: ", signer, today_str, 12, 17)
+    _fill_signature_block(
+        accepted_by,
+        _find_label_paragraph(doc, accepted_by),
+        "Заявку принял: ",
+        signer,
+        "(ФИО, должность)",
+        today_str,
+        name_pos_cm=3.5,
+        sig_pos_cm=11.5,
+        date_pos_cm=16.5,
+    )
 
     bare_signatures = [
         p
         for p in doc.paragraphs
         if p.text.strip().startswith("_") and "(" in p.text
     ]
-    _fill_signature_line(bare_signatures[0], None, client.fio, today_str, 9.5, 17)
-    _fill_signature_line(bare_signatures[-1], None, signer, today_str, 9.5, 17)
+    _fill_signature_block(
+        bare_signatures[0],
+        _find_label_paragraph(doc, bare_signatures[0]),
+        None,
+        client.fio,
+        "(ФИО)",
+        today_str,
+        name_pos_cm=0,
+        sig_pos_cm=11.5,
+        date_pos_cm=16.5,
+    )
+    _fill_signature_block(
+        bare_signatures[-1],
+        _find_label_paragraph(doc, bare_signatures[-1]),
+        None,
+        signer,
+        "(ФИО, должность)",
+        today_str,
+        name_pos_cm=0,
+        sig_pos_cm=11.5,
+        date_pos_cm=16.5,
+    )
 
     # Таблица услуг (вторая таблица в шаблоне)
     if len(doc.tables) >= 2:

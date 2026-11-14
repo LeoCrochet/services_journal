@@ -112,10 +112,22 @@ class ExportTests(TestCase):
         # Подписи заполнены ФИО клиента, подписантом площадки и текущей датой
         today_str = date.today().strftime("%d.%m.%Y")
         signer = f"{self.branch.signer_name}, {self.branch.signer_position}"
-        self.assertIn(f"Заявку принял: {signer}\t(подпись)\t{today_str}", text)
-        self.assertIn(f"Заказчик: Иванов Иван Иванович\t(подпись)\t{today_str}", text)
+        self.assertIn(f"Заявку принял: \t{signer}\t", text)
+        self.assertIn(f"Заказчик: \tИванов Иван Иванович\t", text)
         self.assertIn(signer, text)
         self.assertIn(today_str, text)
+
+        # Метка «(подпись)» встречается ровно по одной на каждый блок без дублей
+        self.assertEqual(text.count("(подпись)"), 4)
+
+        # Над меткой «(подпись)» — подчёркнутое пустое место для реальной подписи
+        signature_blanks = [
+            r
+            for p in doc.paragraphs
+            for r in p.runs
+            if r.text.strip() == "" and r.underline
+        ]
+        self.assertEqual(len(signature_blanks), 4)
 
     def test_full_address_without_district(self):
         client = Client.objects.create(
