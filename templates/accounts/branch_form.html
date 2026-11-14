@@ -5,7 +5,7 @@
 {% block content %}
 <h1 class="h3 mb-4">{{ title }}</h1>
 
-<form method="post" class="card p-4" style="max-width: 720px;">
+<form method="post" class="card p-4 branch-form" style="max-width: 720px;">
   {% csrf_token %}
   <div class="row">
     <div class="col-md-6 mb-3">
@@ -13,12 +13,12 @@
       {{ form.name }}
       {% for error in form.name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-md-2 mb-3">
       <label class="form-label">{{ form.code.label }}</label>
       {{ form.code }}
       {% for error in form.code.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
       <label class="form-label">{{ form.prefix.label }}</label>
       {{ form.prefix }}
       {% for error in form.prefix.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
