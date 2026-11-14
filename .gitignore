@@ -9,6 +9,7 @@ venv/
 staticfiles/
 media/
 *.log
+backups/
 
 # Environment
 .env

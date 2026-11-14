@@ -1,7 +1,4 @@
-DO $$
-BEGIN
-   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'services_journal') THEN
-      CREATE USER services_journal WITH PASSWORD 'SjDb_2026_pw_Tr777';
-   END IF;
-END
-$$;
+-- Создание роли БД через psql-переменную.
+-- Запускать через deploy/setup_db.sh, который передаёт :db_password.
+SELECT format('CREATE ROLE services_journal LOGIN PASSWORD %L', :'db_password')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'services_journal')\gexec

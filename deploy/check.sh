@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Проверка работоспособности. SUDO_PASSWORD передавать извне при необходимости.
+SUDO_PASSWORD="${SUDO_PASSWORD:-}"
+
+run_sudo() {
+    if [ -n "$SUDO_PASSWORD" ]; then
+        echo "$SUDO_PASSWORD" | sudo -S "$@"
+    else
+        sudo "$@"
+    fi
+}
+
 echo "== HTTP через localhost =="
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1/
 
@@ -11,10 +22,10 @@ curl -s http://127.0.0.1/accounts/login/ | head -c 200
 
 echo ""
 echo "== Статус gunicorn =="
-echo Adad47pv | sudo -S systemctl is-active gunicorn
+run_sudo systemctl is-active gunicorn
 
 echo "== Статус nginx =="
-echo Adad47pv | sudo -S systemctl is-active nginx
+run_sudo systemctl is-active nginx
 
 echo "== Проверка WeasyPrint/GTK =="
 cd /opt/services_journal
