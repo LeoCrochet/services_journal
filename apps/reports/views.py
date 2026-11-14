@@ -1,6 +1,7 @@
 import tempfile
 from datetime import date
 from io import BytesIO
+from urllib.parse import quote
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -56,49 +57,29 @@ def order_pdf(request, pk):
 
 @login_required
 def order_docx(request, pk):
-    """Бланк заказа в формате DOC (Word)."""
+    """Заявка на оказание услуги по шаблону DOCX."""
     order = get_object_or_404(get_visible_orders(request.user), pk=pk)
 
     try:
-        from docx import Document
+        from .docx_zayavka import build_zayavka_docx
     except ImportError:
         return HttpResponse(
             "python-docx не установлен. Установите зависимости для DOC.",
             status=500,
         )
 
-    doc = Document()
-    doc.add_heading(f"Бланк заказа № {order.number or order.pk}", level=1)
-
-    doc.add_paragraph(f"Клиент: {order.client.fio}")
-    doc.add_paragraph(f"Площадка: {order.branch.name}")
-    doc.add_paragraph(f"Дата документа: {order.document_date}")
-
-    table = doc.add_table(rows=1, cols=3)
-    table.style = "Table Grid"
-    hdr = table.rows[0].cells
-    hdr[0].text = "Наименование услуги"
-    hdr[1].text = "Содержание"
-    hdr[2].text = "Цена"
-
-    for item in order.items.all():
-        row = table.add_row().cells
-        row[0].text = item.name
-        row[1].text = item.description or "—"
-        row[2].text = str(item.price)
-
-    doc.add_paragraph(f"Итого: {order.total}")
-
-    buf = BytesIO()
-    doc.save(buf)
-    buf.seek(0)
+    buf = build_zayavka_docx(order)
 
     response = HttpResponse(
         buf.getvalue(),
         content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
-    filename = f"zayavka_{order.number or order.pk}.docx"
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    number = order.number or order.pk
+    filename = f"Заявка №{number}.docx"
+    response["Content-Disposition"] = (
+        'attachment; filename="zayavka.docx"; '
+        f"filename*=UTF-8''{quote(filename)}"
+    )
     return response
 
 

@@ -5,7 +5,8 @@ from .models import Branch, UserProfile
 
 @admin.register(Branch)
 class BranchAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "prefix")
+    list_display = ("name", "code", "prefix", "signer_name", "signer_position")
+    fields = ("name", "code", "prefix", "signer_name", "signer_position")
 
 
 @admin.register(UserProfile)

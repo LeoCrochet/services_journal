@@ -18,6 +18,8 @@ class Branch(models.Model):
     name = models.CharField("Название", max_length=100)
     code = models.CharField("Код", max_length=10, unique=True)
     prefix = models.CharField("Префикс номера заявки", max_length=10, unique=True)
+    signer_name = models.CharField("ФИО подписанта", max_length=150, blank=True)
+    signer_position = models.CharField("Должность подписанта", max_length=120, blank=True)
 
     class Meta:
         verbose_name = "Площадка"
