@@ -1,0 +1,17 @@
+[Unit]
+Description=gunicorn daemon for services_journal
+After=network.target
+
+[Service]
+User=leocrochet
+Group=leocrochet
+WorkingDirectory=/opt/services_journal
+ExecStart=/opt/services_journal/venv/bin/gunicorn \
+    --access-logfile - \
+    --error-logfile - \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    config.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

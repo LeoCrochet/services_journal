@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Журнал регистрации услуг{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3">Журнал регистрации услуг</h1>
+  <a href="{% url 'journal:create' %}" class="btn btn-primary">Новая запись</a>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Поиск по ФИО">
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-outline-secondary" type="submit">Искать</button>
+  </div>
+  {% if query %}
+  <div class="col-auto">
+    <a href="{% url 'journal:list' %}" class="btn btn-outline-secondary">Сбросить</a>
+  </div>
+  {% endif %}
+</form>
+
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>Номер</th>
+      <th>Дата</th>
+      <th>ФИО</th>
+      <th>Сумма</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <td>{{ order.number|default:order.pk }}</td>
+      <td>{{ order.document_date }}</td>
+      <td>{{ order.client.fio }}</td>
+      <td>{{ order.total }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'journal:detail' order.pk %}">Открыть</a>
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'journal:update' order.pk %}">Изменить</a>
+        <a class="btn btn-sm btn-outline-danger" href="{% url 'journal:delete' order.pk %}">Удалить</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="text-muted">Записей пока нет.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

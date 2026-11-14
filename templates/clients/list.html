@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Клиенты{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3">Клиенты</h1>
+  <a href="{% url 'clients:create' %}" class="btn btn-primary">Добавить клиента</a>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Поиск по ФИО">
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-outline-secondary" type="submit">Искать</button>
+  </div>
+  {% if query %}
+  <div class="col-auto">
+    <a href="{% url 'clients:list' %}" class="btn btn-outline-secondary">Сбросить</a>
+  </div>
+  {% endif %}
+</form>
+
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>Код</th>
+      <th>ФИО</th>
+      <th>Дата рождения</th>
+      <th>Документ</th>
+      <th>Телефон</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for client in clients %}
+    <tr>
+      <td>{{ client.kod }}</td>
+      <td>{{ client.fio }}</td>
+      <td>{{ client.birth_date|default:"—" }}</td>
+      <td>{{ client.document_type }} {{ client.document_series }} {{ client.document_number }}</td>
+      <td>{{ client.phone|default:"—" }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'clients:update' client.pk %}">Изменить</a>
+        <a class="btn btn-sm btn-outline-danger" href="{% url 'clients:delete' client.pk %}">Удалить</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="text-muted">Клиенты не найдены.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

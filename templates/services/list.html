@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Услуги{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3">Справочник услуг</h1>
+  <a href="{% url 'services:create' %}" class="btn btn-primary">Добавить услугу</a>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Поиск по наименованию">
+  </div>
+  <div class="col-auto">
+    <button class="btn btn-outline-secondary" type="submit">Искать</button>
+  </div>
+  {% if query %}
+  <div class="col-auto">
+    <a href="{% url 'services:list' %}" class="btn btn-outline-secondary">Сбросить</a>
+  </div>
+  {% endif %}
+</form>
+
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>Код</th>
+      <th>Наименование</th>
+      <th>Содержание</th>
+      <th>Цена</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for service in services %}
+    <tr>
+      <td>{{ service.kod }}</td>
+      <td>{{ service.name }}</td>
+      <td>{{ service.description|truncatechars:80|default:"—" }}</td>
+      <td>{{ service.price }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'services:update' service.pk %}">Изменить</a>
+        <a class="btn btn-sm btn-outline-danger" href="{% url 'services:delete' service.pk %}">Удалить</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5" class="text-muted">Услуги не найдены.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

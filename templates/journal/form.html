@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Запись журнала{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">{% if order %}Редактировать запись{% else %}Новая запись{% endif %}</h1>
+
+<form method="post" id="order-form">
+  {% csrf_token %}
+  {{ formset.management_form }}
+
+  <div class="card p-4 mb-4">
+    <h2 class="h6">Данные записи</h2>
+    <div class="row">
+      <div class="col-md-3 mb-3">
+        <label class="form-label">Номер</label>
+        {{ form.number }}
+      </div>
+      <div class="col-md-3 mb-3">
+        <label class="form-label">Дата документа</label>
+        {{ form.document_date }}
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Клиент</label>
+        {{ form.client }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-4 mb-4">
+    <h2 class="h6">Оказанные услуги</h2>
+    <table class="table align-middle" id="items-table">
+      <thead>
+        <tr>
+          <th style="width: 40%;">Услуга</th>
+          <th>Наименование</th>
+          <th>Содержание</th>
+          <th style="width: 120px;">Цена</th>
+          <th style="width: 60px;">Удалить</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item_form in formset %}
+        <tr class="item-row">
+          <td>{{ item_form.service }}</td>
+          <td>{{ item_form.name }}</td>
+          <td>{{ item_form.description }}</td>
+          <td>{{ item_form.price }}</td>
+          <td class="text-center">
+            {% if item_form.instance.pk %}{{ item_form.DELETE }}{% endif %}
+          </td>
+          <td class="d-none">{{ item_form.id }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-3">
+    <button class="btn btn-primary" type="submit">Сохранить</button>
+    <a href="{% url 'journal:list' %}" class="btn btn-secondary">Отмена</a>
+  </div>
+</form>
+
+{{ services_data|json_script:"services-data" }}
+
+<script>
+  var services = JSON.parse(document.getElementById('services-data').textContent);
+  var table = document.getElementById('items-table');
+  var totalForms = document.querySelector('#id_items-TOTAL_FORMS');
+
+  function serviceOptions(selectedId) {
+    var html = '<option value="">---------</option>';
+    services.forEach(function (service) {
+      var selected = String(service.id) === String(selectedId) ? ' selected' : '';
+      html += '<option value="' + service.id + '"' + selected + '>' + service.name + '</option>';
+    });
+    return html;
+  }
+
+  function bindServiceSelect(select, row) {
+    select.addEventListener('change', function () {
+      var service = services.find(function (s) {
+        return String(s.id) === String(select.value);
+      });
+      if (service) {
+        row.querySelector('[name$="-name"]').value = service.name;
+        row.querySelector('[name$="-description"]').value = service.description || '';
+        row.querySelector('[name$="-price"]').value = service.price;
+      }
+    });
+  }
+
+  document.querySelectorAll('.item-row').forEach(function (row) {
+    var select = row.querySelector('[name$="-service"]');
+    if (select) bindServiceSelect(select, row);
+  });
+
+  function addRow() {
+    var index = parseInt(totalForms.value, 10) || 0;
+    totalForms.value = index + 1;
+
+    var tr = table.querySelector('tbody').insertRow();
+    tr.className = 'item-row';
+
+    var cells = [
+      '<td><select name="items-' + index + '-service" class="form-select">' + serviceOptions('') + '</select></td>',
+      '<td><input type="text" name="items-' + index + '-name" class="form-control"></td>',
+      '<td><textarea name="items-' + index + '-description" class="form-control"></textarea></td>',
+      '<td><input type="number" step="0.01" name="items-' + index + '-price" class="form-control"></td>',
+      '<td></td>',
+      '<td><input type="hidden" name="items-' + index + '-id" id="id_items-' + index + '-id"></td>'
+    ];
+    tr.innerHTML = cells.join('');
+
+    var select = tr.querySelector('[name$="-service"]');
+    if (select) bindServiceSelect(select, tr);
+  }
+
+  var addButton = document.createElement('button');
+  addButton.type = 'button';
+  addButton.className = 'btn btn-sm btn-outline-primary mb-3';
+  addButton.textContent = '+ Добавить услугу';
+  addButton.addEventListener('click', addRow);
+  table.parentNode.insertBefore(addButton, table);
+</script>
+{% endblock %}
