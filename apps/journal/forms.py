@@ -19,6 +19,57 @@ class OrderItemForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["service"].widget.attrs.setdefault("class", "form-select")
         self.fields["service"].required = False
+        self.fields["name"].required = False
+        self.fields["price"].required = False
+
+    def is_active(self, data=None):
+        data = data or self.cleaned_data or {}
+        return any(
+            [
+                data.get("name"),
+                data.get("service"),
+                data.get("description"),
+                data.get("price") not in (None, ""),
+            ]
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("DELETE"):
+            return cleaned_data
+
+        if not self.is_active(cleaned_data):
+            return cleaned_data
+
+        if not cleaned_data.get("name"):
+            self.add_error("name", "Укажите наименование услуги.")
+
+        if cleaned_data.get("price") is None or cleaned_data.get("price") < 0:
+            self.add_error("price", "Цена должна быть неотрицательным числом.")
+
+        return cleaned_data
+
+    def _post_clean(self):
+        # Пустые строки не проверяем на уровне модели — их отсеет формсет
+        if not self.is_active():
+            return
+        super()._post_clean()
+
+
+class BaseOrderItemFormSet(forms.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+
+        active = [
+            form
+            for form in self.forms
+            if not self._should_delete_form(form) and form.is_active()
+        ]
+
+        if not active:
+            raise forms.ValidationError("Добавьте хотя бы одну услугу.")
 
 
 class OrderForm(forms.ModelForm):
@@ -70,6 +121,7 @@ OrderItemFormSet = forms.inlineformset_factory(
     Order,
     OrderItem,
     form=OrderItemForm,
+    formset=BaseOrderItemFormSet,
     fields=["service", "name", "description", "price"],
     extra=1,
     can_delete=True,
