@@ -5,7 +5,9 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h3">Клиенты</h1>
+  {% if can_edit %}
   <a href="{% url 'clients:create' %}" class="btn btn-primary">Добавить клиента</a>
+  {% endif %}
 </div>
 
 <form class="row g-2 mb-3" method="get">
@@ -44,8 +46,10 @@
       <td>{{ client.document_type }} {{ client.document_series }} {{ client.document_number }}</td>
       <td>{{ client.phone|default:"—" }}</td>
       <td class="text-end">
+        {% if can_edit %}
         <a class="btn btn-sm btn-outline-primary" href="{% url 'clients:update' client.pk %}">Изменить</a>
         <a class="btn btn-sm btn-outline-danger" href="{% url 'clients:delete' client.pk %}">Удалить</a>
+        {% endif %}
       </td>
     </tr>
     {% empty %}

@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.accounts.decorators import role_required
+from apps.accounts.models import ROLE_ADMIN, ROLE_OPERATOR
 from apps.accounts.services import get_user_branch
 from apps.services.models import Service
 
@@ -35,7 +37,7 @@ def _order_context(request, form, formset, order=None):
     }
 
 
-@login_required
+@role_required(ROLE_ADMIN, ROLE_OPERATOR)
 def create_view(request):
     if request.method == "POST":
         form = _order_form(request)
@@ -57,7 +59,7 @@ def create_view(request):
     return render(request, "journal/form.html", _order_context(request, form, formset))
 
 
-@login_required
+@role_required(ROLE_ADMIN, ROLE_OPERATOR)
 def update_view(request, pk):
     order = get_object_or_404(get_visible_orders(request.user), pk=pk)
     if request.method == "POST":
@@ -80,7 +82,7 @@ def detail_view(request, pk):
     return render(request, "journal/detail.html", {"order": order})
 
 
-@login_required
+@role_required(ROLE_ADMIN, ROLE_OPERATOR)
 def delete_view(request, pk):
     order = get_object_or_404(get_visible_orders(request.user), pk=pk)
     if request.method == "POST":

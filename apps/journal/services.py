@@ -1,12 +1,14 @@
-from apps.accounts.services import get_user_branch
+from apps.accounts.services import get_access
 
 from .models import Order
 
 
 def get_visible_orders(user):
     """Заявки, доступные пользователю с учётом площадки."""
-    branch = get_user_branch(user)
+    allowed, branch = get_access(user)
     queryset = Order.objects.select_related("client", "branch")
+    if not allowed:
+        return queryset.none()
     if branch is not None:
         queryset = queryset.filter(branch=branch)
     return queryset

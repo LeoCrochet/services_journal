@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.accounts.decorators import role_required
+from apps.accounts.models import ROLE_ADMIN, ROLE_OPERATOR
 from apps.accounts.services import get_user_branch
 
 from .forms import ClientForm
@@ -27,7 +29,7 @@ def _client_form(request, instance=None):
     return form
 
 
-@login_required
+@role_required(ROLE_ADMIN, ROLE_OPERATOR)
 def create_view(request):
     form = _client_form(request)
     if request.method == "POST":
@@ -41,7 +43,7 @@ def create_view(request):
     return render(request, "clients/form.html", {"form": form, "title": "Новый клиент"})
 
 
-@login_required
+@role_required(ROLE_ADMIN, ROLE_OPERATOR)
 def update_view(request, pk):
     client = get_object_or_404(get_visible_clients(request.user), pk=pk)
     form = _client_form(request, instance=client)
@@ -56,7 +58,7 @@ def update_view(request, pk):
     return render(request, "clients/form.html", {"form": form, "title": "Редактировать клиента"})
 
 
-@login_required
+@role_required(ROLE_ADMIN, ROLE_OPERATOR)
 def delete_view(request, pk):
     client = get_object_or_404(get_visible_clients(request.user), pk=pk)
     if request.method == "POST":

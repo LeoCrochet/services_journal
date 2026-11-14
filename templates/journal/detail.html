@@ -7,7 +7,9 @@
   <h1 class="h3">Запись №{{ order.number|default:order.pk }} от {{ order.document_date }}</h1>
   <div>
     <a href="{% url 'reports:order_pdf' order.pk %}" class="btn btn-primary" target="_blank">Печать (PDF)</a>
+    {% if can_edit %}
     <a href="{% url 'journal:update' order.pk %}" class="btn btn-outline-primary">Изменить</a>
+    {% endif %}
     <a href="{% url 'journal:list' %}" class="btn btn-outline-secondary">Назад</a>
   </div>
 </div>
