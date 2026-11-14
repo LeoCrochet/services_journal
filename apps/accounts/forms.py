@@ -4,6 +4,25 @@ from django.contrib.auth.models import User
 from .models import ROLE_ADMIN, ROLE_MANAGER, ROLE_OPERATOR, Branch, UserProfile
 
 
+class BranchForm(forms.ModelForm):
+    """Создание/редактирование площадки с данными подписанта."""
+
+    class Meta:
+        model = Branch
+        fields = ["name", "code", "prefix", "signer_name", "signer_position"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "code": forms.TextInput(attrs={"class": "form-control"}),
+            "prefix": forms.TextInput(attrs={"class": "form-control"}),
+            "signer_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Например: Петров Петр Петрович"}
+            ),
+            "signer_position": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Например: Менеджер"}
+            ),
+        }
+
+
 class UserForm(forms.ModelForm):
     """Создание/редактирование пользователя с ролью и площадкой."""
 

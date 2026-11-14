@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Площадки{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3">Площадки</h1>
+  <a href="{% url 'accounts:branch_create' %}" class="btn btn-primary">Добавить площадку</a>
+</div>
+
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>Название</th>
+      <th>Код</th>
+      <th>Префикс</th>
+      <th>ФИО подписанта</th>
+      <th>Должность подписанта</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for branch in branches %}
+    <tr>
+      <td>{{ branch.name }}</td>
+      <td>{{ branch.code }}</td>
+      <td>{{ branch.prefix }}</td>
+      <td>{{ branch.signer_name|default:"—" }}</td>
+      <td>{{ branch.signer_position|default:"—" }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:branch_update' branch.pk %}">Изменить</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="text-muted">Площадки не найдены.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
