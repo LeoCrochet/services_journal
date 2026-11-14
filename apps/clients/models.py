@@ -10,6 +10,12 @@ DOCUMENT_TYPES = [
 class Client(models.Model):
     GENDER_CHOICES = [("м", "м"), ("ж", "ж")]
 
+    branch = models.ForeignKey(
+        "accounts.Branch",
+        verbose_name="Площадка",
+        on_delete=models.PROTECT,
+        related_name="clients",
+    )
     kod = models.CharField("Код", max_length=6, blank=True)
     fio = models.CharField("ФИО", max_length=150)
     birth_date = models.DateField("Дата рождения", null=True, blank=True)

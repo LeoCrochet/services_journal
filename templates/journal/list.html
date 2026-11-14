@@ -27,6 +27,7 @@
     <tr>
       <th>Номер</th>
       <th>Дата</th>
+      <th>Площадка</th>
       <th>ФИО</th>
       <th>Сумма</th>
       <th></th>
@@ -37,6 +38,7 @@
     <tr>
       <td>{{ order.number|default:order.pk }}</td>
       <td>{{ order.document_date }}</td>
+      <td>{{ order.branch.name }}</td>
       <td>{{ order.client.fio }}</td>
       <td>{{ order.total }}</td>
       <td class="text-end">
@@ -46,7 +48,7 @@
       </td>
     </tr>
     {% empty %}
-    <tr><td colspan="5" class="text-muted">Записей пока нет.</td></tr>
+    <tr><td colspan="6" class="text-muted">Записей пока нет.</td></tr>
     {% endfor %}
   </tbody>
 </table>

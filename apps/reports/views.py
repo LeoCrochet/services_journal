@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 
-from apps.journal.models import Order
+from apps.journal.services import get_visible_orders
 
 try:
     from weasyprint import HTML
@@ -15,7 +15,7 @@ except (ImportError, OSError):  # pragma: no cover - WeasyPrint/GTK не уст�
 
 @login_required
 def order_pdf(request, pk):
-    order = get_object_or_404(Order.objects.select_related("client"), pk=pk)
+    order = get_object_or_404(get_visible_orders(request.user), pk=pk)
 
     if HTML is None:
         return HttpResponse(

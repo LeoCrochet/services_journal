@@ -13,18 +13,29 @@
     <h2 class="h6">Данные записи</h2>
     <div class="row">
       <div class="col-md-3 mb-3">
+        <label class="form-label">Площадка</label>
+        {{ form.branch }}
+        {% for error in form.branch.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-3 mb-3">
         <label class="form-label">Номер</label>
         {{ form.number }}
+        {% for error in form.number.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
       </div>
       <div class="col-md-3 mb-3">
         <label class="form-label">Дата документа</label>
         {{ form.document_date }}
+        {% for error in form.document_date.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
       </div>
-      <div class="col-md-6 mb-3">
+      <div class="col-md-3 mb-3">
         <label class="form-label">Клиент</label>
         {{ form.client }}
+        {% for error in form.client.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
       </div>
     </div>
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
   </div>
 
   <div class="card p-4 mb-4">
@@ -42,10 +53,10 @@
       <tbody>
         {% for item_form in formset %}
         <tr class="item-row">
-          <td>{{ item_form.service }}</td>
-          <td>{{ item_form.name }}</td>
+          <td>{{ item_form.service }}{% for error in item_form.service.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td>
+          <td>{{ item_form.name }}{% for error in item_form.name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td>
           <td>{{ item_form.description }}</td>
-          <td>{{ item_form.price }}</td>
+          <td>{{ item_form.price }}{% for error in item_form.price.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}</td>
           <td class="text-center">
             {% if item_form.instance.pk %}{{ item_form.DELETE }}{% endif %}
           </td>
@@ -53,6 +64,9 @@
         </tr>
         {% endfor %}
       </tbody>
+      {% if formset.non_form_errors %}
+        <tr><td colspan="6"><div class="alert alert-danger mb-0">{{ formset.non_form_errors }}</div></td></tr>
+      {% endif %}
     </table>
   </div>
 

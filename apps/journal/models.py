@@ -5,7 +5,14 @@ from apps.services.models import Service
 
 
 class Order(models.Model):
+    branch = models.ForeignKey(
+        "accounts.Branch",
+        verbose_name="Площадка",
+        on_delete=models.PROTECT,
+        related_name="orders",
+    )
     number = models.CharField("Номер", max_length=20, blank=True)
+    number_seq = models.IntegerField("Порядковый номер", null=True, blank=True)
     document_date = models.DateField("Дата документа")
     client = models.ForeignKey(
         Client,

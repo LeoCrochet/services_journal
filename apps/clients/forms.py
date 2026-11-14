@@ -7,6 +7,7 @@ class ClientForm(forms.ModelForm):
     class Meta:
         model = Client
         fields = [
+            "branch",
             "kod",
             "fio",
             "birth_date",

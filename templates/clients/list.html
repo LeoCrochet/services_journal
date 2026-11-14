@@ -27,6 +27,7 @@
     <tr>
       <th>Код</th>
       <th>ФИО</th>
+      <th>Площадка</th>
       <th>Дата рождения</th>
       <th>Документ</th>
       <th>Телефон</th>
@@ -38,6 +39,7 @@
     <tr>
       <td>{{ client.kod }}</td>
       <td>{{ client.fio }}</td>
+      <td>{{ client.branch.name }}</td>
       <td>{{ client.birth_date|default:"—" }}</td>
       <td>{{ client.document_type }} {{ client.document_series }} {{ client.document_number }}</td>
       <td>{{ client.phone|default:"—" }}</td>
@@ -47,7 +49,7 @@
       </td>
     </tr>
     {% empty %}
-    <tr><td colspan="6" class="text-muted">Клиенты не найдены.</td></tr>
+    <tr><td colspan="7" class="text-muted">Клиенты не найдены.</td></tr>
     {% endfor %}
   </tbody>
 </table>
