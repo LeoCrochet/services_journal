@@ -112,7 +112,8 @@ class ExportTests(TestCase):
         # Подписи заполнены ФИО клиента, подписантом площадки и текущей датой
         today_str = date.today().strftime("%d.%m.%Y")
         signer = f"{self.branch.signer_name}, {self.branch.signer_position}"
-        self.assertIn(f"Заявку принял: {signer} (", text)
+        self.assertIn(f"Заявку принял: {signer}\t(подпись)\t{today_str}", text)
+        self.assertIn(f"Заказчик: Иванов Иван Иванович\t(подпись)\t{today_str}", text)
         self.assertIn(signer, text)
         self.assertIn(today_str, text)
 

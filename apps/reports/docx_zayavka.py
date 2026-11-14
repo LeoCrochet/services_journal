@@ -1,11 +1,12 @@
 """Генерация заявки на оказание услуги по шаблону DOCX."""
 
-import re
 from datetime import date
 from io import BytesIO
 from pathlib import Path
 
 from docx import Document
+from docx.enum.text import WD_TAB_ALIGNMENT
+from docx.shared import Cm
 
 TEMPLATE_PATH = Path(__file__).with_name("templates_docx") / "zayavka_template.docx"
 
@@ -144,17 +145,46 @@ def _remove_paragraph(paragraph):
     paragraph._element.getparent().remove(paragraph._element)
 
 
-def _fill_signature_line(paragraph, name, date_str):
-    """Заполнить строку подписи: ФИО перед скобкой и дату после скобки."""
-    text = paragraph.text
-    if name:
-        def _name_repl(m):
-            prefix = " " if m.start() > 0 and text[m.start() - 1] == ":" else ""
-            return prefix + name
+def _fill_signature_line(paragraph, prefix, name, date_str, sig_pos_cm, date_pos_cm):
+    """Пересобрать строку подписи с табуляцией.
 
-        text = re.sub(r"_+(?=\s*\()", _name_repl, text, count=1)
-    text = re.sub(r"(\)\s*)_+", lambda m: m.group(1) + date_str, text, count=1)
-    _set_paragraph_text(paragraph, text)
+    Подпись и дата привязываются к фиксированным позициям (tab stops),
+    поэтому не смещаются при разной длине ФИО.
+    """
+    base = paragraph.runs[0] if paragraph.runs else None
+    font_name = base.font.name if base is not None else None
+    font_size = base.font.size if base is not None else None
+    bold = base.font.bold if base is not None else None
+
+    for run in list(paragraph.runs):
+        run._element.getparent().remove(run._element)
+
+    pf = paragraph.paragraph_format
+    pf.tab_stops.clear_all()
+    pf.tab_stops.add_tab_stop(Cm(sig_pos_cm), WD_TAB_ALIGNMENT.CENTER)
+    pf.tab_stops.add_tab_stop(Cm(date_pos_cm), WD_TAB_ALIGNMENT.RIGHT)
+
+    segments = []
+    if prefix:
+        segments.append((prefix, False))
+    if name:
+        segments.append((name, True))
+    else:
+        segments.append(("________", False))
+    segments.append(("\t(подпись)", False))
+    segments.append(("\t", False))
+    segments.append((date_str, True))
+
+    for text, underline in segments:
+        run = paragraph.add_run(text)
+        if font_name is not None:
+            run.font.name = font_name
+        if font_size is not None:
+            run.font.size = font_size
+        if bold is not None:
+            run.font.bold = bold
+        if underline:
+            run.underline = True
 
 
 def build_zayavka_docx(order):
@@ -229,20 +259,22 @@ def build_zayavka_docx(order):
         for p in doc.paragraphs
         if p.text.startswith("Заказчик:") and "(" in p.text
     )
-    _fill_signature_line(customer_signature, client.fio, today_str)
+    _fill_signature_line(
+        customer_signature, "Заказчик: ", client.fio, today_str, 12, 17
+    )
 
     accepted_by = next(
         p for p in doc.paragraphs if p.text.startswith("Заявку принял")
     )
-    _fill_signature_line(accepted_by, signer, today_str)
+    _fill_signature_line(accepted_by, "Заявку принял: ", signer, today_str, 12, 17)
 
     bare_signatures = [
         p
         for p in doc.paragraphs
         if p.text.strip().startswith("_") and "(" in p.text
     ]
-    _fill_signature_line(bare_signatures[0], client.fio, today_str)
-    _fill_signature_line(bare_signatures[-1], signer, today_str)
+    _fill_signature_line(bare_signatures[0], None, client.fio, today_str, 9.5, 17)
+    _fill_signature_line(bare_signatures[-1], None, signer, today_str, 9.5, 17)
 
     # Таблица услуг (вторая таблица в шаблоне)
     if len(doc.tables) >= 2:
