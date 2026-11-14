@@ -29,7 +29,16 @@ class ClientForm(forms.ModelForm):
             "phone",
         ]
         widgets = {
-            "birth_date": forms.DateInput(attrs={"type": "date"}),
-            "document_issue_date": forms.DateInput(attrs={"type": "date"}),
-            "registration_period": forms.DateInput(attrs={"type": "date"}),
+            "birth_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "document_issue_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "registration_period": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            if isinstance(field, (forms.ModelChoiceField, forms.ChoiceField)):
+                css_class = "form-select"
+            else:
+                css_class = "form-control"
+            field.widget.attrs.setdefault("class", css_class)

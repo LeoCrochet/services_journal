@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.accounts.decorators import role_required
@@ -7,7 +8,6 @@ from apps.accounts.services import get_user_branch
 from apps.services.models import Service
 
 from .forms import OrderForm, OrderItemFormSet
-from .models import Order
 from .services import assign_order_number, get_visible_orders
 
 
@@ -17,15 +17,22 @@ def list_view(request):
     orders = get_visible_orders(request.user)
     if query:
         orders = orders.filter(client__fio__icontains=query)
-    return render(request, "journal/list.html", {"orders": orders, "query": query})
+
+    paginator = Paginator(orders, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    return render(
+        request,
+        "journal/list.html",
+        {"orders": page_obj, "page_obj": page_obj, "query": query},
+    )
 
 
 def _services_data():
     return list(Service.objects.values("id", "name", "description", "price"))
 
 
-def _order_form(request, instance=None):
-    return OrderForm(request.POST or None, instance=instance, user=request.user)
+def _order_form(request, instance=None, initial=None):
+    return OrderForm(request.POST or None, instance=instance, initial=initial, user=request.user)
 
 
 def _order_context(request, form, formset, order=None):
@@ -54,7 +61,11 @@ def create_view(request):
             assign_order_number(order)
             return redirect("journal:detail", pk=order.pk)
     else:
-        form = _order_form(request)
+        initial = {}
+        client_id = request.GET.get("client")
+        if client_id:
+            initial["client"] = client_id
+        form = _order_form(request, initial=initial)
         formset = OrderItemFormSet()
     return render(request, "journal/form.html", _order_context(request, form, formset))
 

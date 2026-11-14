@@ -27,7 +27,9 @@ class UserForm(forms.ModelForm):
             "is_active": "Активен",
         }
         widgets = {
-            "first_name": forms.TextInput(attrs={"placeholder": "Например: Иванов Иван"}),
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"placeholder": "Например: Иванов Иван", "class": "form-control"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -36,14 +38,16 @@ class UserForm(forms.ModelForm):
         password1 = forms.CharField(
             label="Пароль",
             required=self.instance.pk is None,
-            widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+            widget=forms.PasswordInput(attrs={"autocomplete": "new-password", "class": "form-control"}),
             help_text="Минимум 8 символов.",
         )
         password2 = forms.CharField(
             label="Подтверждение пароля",
             required=self.instance.pk is None,
-            widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+            widget=forms.PasswordInput(attrs={"autocomplete": "new-password", "class": "form-control"}),
         )
+        self.fields["role"].widget.attrs["class"] = "form-select"
+        self.fields["branch"].widget.attrs["class"] = "form-select"
         if self.instance.pk:
             password1.help_text = "Оставьте пустым, чтобы не менять."
         self.fields["password1"] = password1

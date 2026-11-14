@@ -40,7 +40,7 @@
     {% for client in clients %}
     <tr>
       <td>{{ client.kod }}</td>
-      <td>{{ client.fio }}</td>
+      <td><a href="{% url 'clients:detail' client.pk %}">{{ client.fio }}</a></td>
       <td>{{ client.branch.name }}</td>
       <td>{{ client.birth_date|default:"—" }}</td>
       <td>{{ client.document_type }} {{ client.document_series }} {{ client.document_number }}</td>
@@ -57,4 +57,6 @@
     {% endfor %}
   </tbody>
 </table>
+
+{% include "_pagination.html" %}
 {% endblock %}

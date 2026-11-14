@@ -27,7 +27,7 @@
         </ul>
         <form class="d-flex" method="POST" action="{% url 'logout' %}">
           {% csrf_token %}
-          <span class="navbar-text me-2">{{ user.username }}</span>
+          <span class="navbar-text me-2">{{ user.first_name|default:user.username }}</span>
           <button class="btn btn-outline-light btn-sm" type="submit">Выйти</button>
         </form>
       </div>
