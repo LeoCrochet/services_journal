@@ -21,6 +21,9 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'journal:list' %}">Журнал</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'clients:list' %}">Клиенты</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'services:list' %}">Услуги</a></li>
+          {% if user_is_global %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'reports:report_index' %}">Отчёты</a></li>
+          {% endif %}
           {% if is_admin %}
           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:user_list' %}">Пользователи</a></li>
           {% endif %}

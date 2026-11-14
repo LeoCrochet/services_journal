@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Отчёты{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Отчёты</h1>
+
+<div class="card p-4 mb-4">
+  <h2 class="h6">Отчёт по заявкам (PDF)</h2>
+  <form method="get" action="{% url 'reports:report_pdf' %}" target="_blank" class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label">Площадка</label>
+      <select name="branch" class="form-select">
+        <option value="">Все площадки</option>
+        {% for branch in branches %}
+        <option value="{{ branch.pk }}">{{ branch.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">С даты</label>
+      <input type="date" name="date_from" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">По дату</label>
+      <input type="date" name="date_to" class="form-control">
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button class="btn btn-primary w-100" type="submit">Сформировать</button>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4">
+  <h2 class="h6">Экспорт данных</h2>
+  <div class="row g-3">
+    <div class="col-md-4">
+      <a class="btn btn-outline-primary w-100" href="{% url 'reports:clients_excel' %}">Клиенты (Excel)</a>
+    </div>
+    <div class="col-md-4">
+      <a class="btn btn-outline-primary w-100" href="{% url 'reports:orders_excel' %}">Заявки (Excel)</a>
+    </div>
+    {% if is_admin %}
+    <div class="col-md-4">
+      <a class="btn btn-outline-primary w-100" href="{% url 'reports:services_excel' %}">Услуги (Excel)</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -3,3 +3,5 @@ psycopg[binary]>=3.2,<4
 python-dotenv>=1.0,<2
 WeasyPrint>=65,<70
 gunicorn>=23,<24
+openpyxl>=3.1,<4
+python-docx>=1.1,<2

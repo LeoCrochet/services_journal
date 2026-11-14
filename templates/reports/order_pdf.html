@@ -44,6 +44,7 @@
   <h1>Бланк заказа №{{ order.number|default:order.pk }}</h1>
 
   <div class="client">
+    <p><strong>Площадка:</strong> {{ order.branch.name }}</p>
     <p><strong>Клиент:</strong> {{ order.client.fio }}</p>
     <p><strong>Дата документа:</strong> {{ order.document_date }}</p>
   </div>
