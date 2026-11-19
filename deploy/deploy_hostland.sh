@@ -54,6 +54,11 @@ echo "==> Установка зависимостей"
 "$PROJECT_DIR/venv/bin/python" -m pip install --upgrade pip wheel
 "$PROJECT_DIR/venv/bin/python" -m pip install -r requirements-hostland.txt
 
+# WeasyPrint (PDF) необязателен: на shared-хостинге может не хватить libs.
+echo "==> Установка WeasyPrint (необязательно, для PDF)"
+"$PROJECT_DIR/venv/bin/python" -m pip install "WeasyPrint>=65,<70" \
+  || echo "ВНИМАНИЕ: WeasyPrint не установился — PDF-генерация будет недоступна."
+
 # ----------------------------- .env ----------------------------------------
 echo "==> Запись .env"
 umask 077
