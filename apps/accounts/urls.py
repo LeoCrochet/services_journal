@@ -6,6 +6,7 @@ app_name = "accounts"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("instruction/", views.instruction, name="instruction"),
     path("branches/", views.branch_list, name="branch_list"),
     path("branches/create/", views.branch_create, name="branch_create"),
     path("branches/<int:pk>/edit/", views.branch_update, name="branch_update"),

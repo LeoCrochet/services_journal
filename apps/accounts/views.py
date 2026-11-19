@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from .decorators import admin_required
 from .forms import BranchForm, UserForm
@@ -10,6 +11,16 @@ from .models import Branch
 @login_required
 def home(request):
     return redirect("journal:list")
+
+
+def instruction(request):
+    """Пользовательская инструкция по работе с порталом."""
+    if request.user.is_authenticated:
+        fallback = reverse("journal:list")
+    else:
+        fallback = reverse("login")
+    back_url = request.META.get("HTTP_REFERER") or fallback
+    return render(request, "instruction.html", {"back_url": back_url})
 
 
 @admin_required
