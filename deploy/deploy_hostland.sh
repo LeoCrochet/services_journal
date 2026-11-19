@@ -9,7 +9,10 @@ set -euo pipefail
 
 # ----------------------------- настройки -----------------------------------
 DOMAIN="domain1328304.ru.host1328304.serv7.hostland.pro"
-PROJECT_DIR="$HOME/$DOMAIN"
+PUBLIC_DOMAIN="domain1328304.ru"
+# Passenger на Hostland запускает приложение из projects/journal,
+# здесь же лежит passenger_wsgi.py и venv.
+PROJECT_DIR="$HOME/$PUBLIC_DOMAIN/projects/journal"
 REPO_URL="https://github.com/LeoCrochet/services_journal.git"
 BRANCH="deploy/hostland"
 PYTHON="/usr/bin/python3.12"
@@ -65,8 +68,8 @@ umask 077
 {
   echo "SECRET_KEY=$SECRET_KEY"
   echo "DEBUG=False"
-  echo "ALLOWED_HOSTS=$DOMAIN,localhost,127.0.0.1"
-  echo "CSRF_TRUSTED_ORIGINS=https://$DOMAIN"
+  echo "ALLOWED_HOSTS=$PUBLIC_DOMAIN,www.$PUBLIC_DOMAIN,$DOMAIN,localhost,127.0.0.1"
+  echo "CSRF_TRUSTED_ORIGINS=https://$PUBLIC_DOMAIN,https://www.$PUBLIC_DOMAIN,http://$PUBLIC_DOMAIN,http://$DOMAIN,https://$DOMAIN"
   echo ""
   echo "DB_ENGINE=django.db.backends.mysql"
   echo "DB_NAME=$DB_NAME"
@@ -87,8 +90,9 @@ echo "==> Настройка .htaccess для Passenger"
   echo "PassengerAppEnv production"
 } > "$PROJECT_DIR/.htaccess"
 
-mkdir -p "$PROJECT_DIR/tmp"
-touch "$PROJECT_DIR/tmp/restart.txt"
+# tmp/ может принадлежать root (его создала панель Hostland) — не падаем.
+mkdir -p "$PROJECT_DIR/tmp" || echo "ВНИМАНИЕ: не удалось создать tmp/ (владелец root?)"
+touch "$PROJECT_DIR/tmp/restart.txt" || echo "ВНИМАНИЕ: не удалось обновить tmp/restart.txt"
 
 # ----------------------------- миграции и статика --------------------------
 echo "==> Миграции"
@@ -121,6 +125,6 @@ print('created' if created else 'updated', user.username)
 fi
 
 # Перезапуск приложения
-touch "$PROJECT_DIR/tmp/restart.txt"
+touch "$PROJECT_DIR/tmp/restart.txt" || true
 
 echo "==> Готово: https://$DOMAIN/"

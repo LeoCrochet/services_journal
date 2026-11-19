@@ -120,7 +120,10 @@ TIME_ZONE = "Europe/Moscow"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+# На Hostland nginx перехватывает префикс /static/ и отдаёт свой 404,
+# поэтому раздаём статику через WhiteNoise по префиксу /assets/.
+# Шаблоны используют {% static %}, путь подставляется автоматически.
+STATIC_URL = "/assets/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
