@@ -11,6 +11,7 @@ set -euo pipefail
 DOMAIN="domain1328304.ru.host1328304.serv7.hostland.pro"
 PROJECT_DIR="$HOME/$DOMAIN"
 REPO_URL="https://github.com/LeoCrochet/services_journal.git"
+BRANCH="develop"
 PYTHON="/usr/bin/python3.12"
 
 DB_NAME="host1328304_journal"
@@ -25,14 +26,18 @@ SUPERUSER_PASSWORD="${SUPERUSER_PASSWORD:-}"
 # ----------------------------- код проекта ---------------------------------
 if [ -d "$PROJECT_DIR/.git" ]; then
   echo "==> Обновление кода в $PROJECT_DIR"
-  git -C "$PROJECT_DIR" pull --ff-only
+  git -C "$PROJECT_DIR" fetch origin "$BRANCH"
+  git -C "$PROJECT_DIR" checkout "$BRANCH"
+  git -C "$PROJECT_DIR" pull --ff-only origin "$BRANCH"
 else
-  echo "==> Клонирование репозитория в $PROJECT_DIR"
   if [ -d "$PROJECT_DIR" ] && [ -n "$(ls -A "$PROJECT_DIR" 2>/dev/null)" ]; then
-    echo "ВНИМАНИЕ: папка $PROJECT_DIR не пуста. Перенесите старые файлы вручную."
-    exit 1
+    BACKUP_DIR="$HOME/_backup_${DOMAIN}_$(date +%Y%m%d_%H%M%S)"
+    echo "==> Папка домена не пуста, переношу содержимое в $BACKUP_DIR"
+    mkdir -p "$BACKUP_DIR"
+    mv "$PROJECT_DIR"/* "$PROJECT_DIR"/.[!.]* "$PROJECT_DIR"/..?* "$BACKUP_DIR"/ 2>/dev/null || true
   fi
-  git clone "$REPO_URL" "$PROJECT_DIR"
+  echo "==> Клонирование ветки $BRANCH в $PROJECT_DIR"
+  git clone --branch "$BRANCH" "$REPO_URL" "$PROJECT_DIR"
 fi
 
 cd "$PROJECT_DIR"
