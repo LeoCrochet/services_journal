@@ -1,0 +1,10 @@
+# Phusion Passenger для проекта на Hostland.
+# Кладётся в корень домена рядом с passenger_wsgi.py.
+# deploy/deploy_hostland.sh создаёт этот файл автоматически.
+
+PassengerAppRoot /home/host1328304/domain1328304.ru.host1328304.serv7.hostland.pro
+PassengerBaseURI /
+PassengerAppType wsgi
+PassengerStartupFile passenger_wsgi.py
+PassengerPython /usr/bin/python3.12
+PassengerAppEnv production

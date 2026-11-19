@@ -1,0 +1,12 @@
+# Зависимости для демо-развёртывания на Hostland (shared-хостинг).
+# Отличия от основного requirements.txt:
+#   * Django 5.2 LTS — поддерживает MySQL 8.0 (Django 6 требует MySQL 8.4+);
+#   * PyMySQL вместо psycopg — чистый Python-драйвер, без компиляции;
+#   * whitenoise — раздача статики без nginx.
+Django>=5.2,<5.3
+PyMySQL>=1.1,<2
+python-dotenv>=1.0,<2
+whitenoise>=6.6,<7
+WeasyPrint>=65,<70
+openpyxl>=3.1,<4
+python-docx>=1.1,<2

@@ -11,6 +11,11 @@ media/
 *.log
 backups/
 
+# Hostland / Passenger
+.htaccess
+tmp/
+.env.hostland
+
 # Environment
 .env
 
