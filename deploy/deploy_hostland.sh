@@ -16,6 +16,8 @@ PYTHON="/usr/bin/python3.12"
 
 DB_NAME="host1328304_journal"
 DB_USER="host1328304_root8"
+DB_HOST="127.0.0.1"
+DB_PORT="3308"
 DB_PASSWORD="${DB_PASSWORD:?Задайте DB_PASSWORD в окружении перед запуском}"
 SECRET_KEY="${SECRET_KEY:?Задайте SECRET_KEY в окружении перед запуском}"
 
@@ -65,8 +67,8 @@ umask 077
   echo "DB_NAME=$DB_NAME"
   echo "DB_USER=$DB_USER"
   echo "DB_PASSWORD=$DB_PASSWORD"
-  echo "DB_HOST=localhost"
-  echo "DB_PORT=3306"
+  echo "DB_HOST=$DB_HOST"
+  echo "DB_PORT=$DB_PORT"
 } > "$PROJECT_DIR/.env"
 
 # ----------------------------- Passenger -----------------------------------
