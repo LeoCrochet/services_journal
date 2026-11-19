@@ -11,7 +11,7 @@ set -euo pipefail
 DOMAIN="domain1328304.ru.host1328304.serv7.hostland.pro"
 PROJECT_DIR="$HOME/$DOMAIN"
 REPO_URL="https://github.com/LeoCrochet/services_journal.git"
-BRANCH="develop"
+BRANCH="deploy/hostland"
 PYTHON="/usr/bin/python3.12"
 
 DB_NAME="host1328304_journal"
