@@ -15,7 +15,7 @@ BRANCH="develop"
 PYTHON="/usr/bin/python3.12"
 
 DB_NAME="host1328304_journal"
-DB_USER="host1328304_root"
+DB_USER="host1328304_root8"
 DB_PASSWORD="${DB_PASSWORD:?Задайте DB_PASSWORD в окружении перед запуском}"
 SECRET_KEY="${SECRET_KEY:?Задайте SECRET_KEY в окружении перед запуском}"
 
