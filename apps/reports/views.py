@@ -1,3 +1,4 @@
+import logging
 import tempfile
 from datetime import date
 from io import BytesIO
@@ -26,33 +27,74 @@ try:
 except (ImportError, OSError):  # pragma: no cover - WeasyPrint/GTK не установлен
     HTML = None
 
+logger = logging.getLogger(__name__)
+
+_PDF_FALLBACK_NOTICE = (
+    '<div style="position:fixed;top:0;left:0;right:0;z-index:9999;'
+    'background:#fff3cd;border-bottom:1px solid #ffecb5;color:#664d03;'
+    'padding:10px 16px;font:14px/1.4 Arial,sans-serif;">'
+    'Автоматическая генерация PDF на сервере недоступна. '
+    'Нажмите <b>Ctrl+P</b> (на macOS — <b>Cmd+P</b>) и выберите '
+    '«Сохранить как PDF» в диалоге печати.'
+    '</div>'
+)
+
+_PDF_FALLBACK_SCRIPT = (
+    '<script>'
+    'window.addEventListener("load", function () {'
+    '  setTimeout(function () { window.print(); }, 400);'
+    '});'
+    '</script>'
+)
+
+
+def _pdf_response_or_fallback(request, template_name, context, filename):
+    """Пробует отдать PDF через WeasyPrint, иначе — HTML с автопечатью.
+
+    На shared-хостинге WeasyPrint может быть не установлен или не иметь
+    системных библиотек (pango/cairo), поэтому вместо 500 отдаём
+    готовый к печати HTML — из него браузер сохраняет PDF через Ctrl+P.
+    """
+    html_string = render_to_string(template_name, context, request=request)
+
+    if HTML is not None:
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".pdf") as tmp:
+                HTML(
+                    string=html_string,
+                    base_url=request.build_absolute_uri("/"),
+                ).write_pdf(tmp.name)
+                tmp.seek(0)
+                content = tmp.read()
+            response = HttpResponse(content, content_type="application/pdf")
+            response["Content-Disposition"] = f'inline; filename="{filename}"'
+            return response
+        except Exception:  # noqa: BLE001 - любые ошибки рендера PDF
+            logger.exception("Не удалось сформировать PDF, отдаём HTML-версию")
+
+    if "</body>" in html_string:
+        html_string = html_string.replace(
+            "</body>", _PDF_FALLBACK_NOTICE + _PDF_FALLBACK_SCRIPT + "</body>", 1
+        )
+    else:
+        html_string += _PDF_FALLBACK_NOTICE + _PDF_FALLBACK_SCRIPT
+
+    response = HttpResponse(html_string, content_type="text/html; charset=utf-8")
+    response["Content-Disposition"] = f'inline; filename="{filename}.html"'
+    return response
+
 
 @login_required
 def order_pdf(request, pk):
     order = get_object_or_404(get_visible_orders(request.user), pk=pk)
 
-    if HTML is None:
-        return HttpResponse(
-            "WeasyPrint не установлен. Установите зависимости для PDF.",
-            status=500,
-        )
-
-    html_string = render_to_string(
+    filename = f"zayavka_{order.number or order.pk}.pdf"
+    return _pdf_response_or_fallback(
+        request,
         "reports/order_pdf.html",
         {"order": order, "items": list(order.items.all()), "total": order.total},
+        filename,
     )
-
-    with tempfile.NamedTemporaryFile(suffix=".pdf") as tmp:
-        HTML(string=html_string, base_url=request.build_absolute_uri("/")).write_pdf(
-            tmp.name
-        )
-        tmp.seek(0)
-        content = tmp.read()
-
-    response = HttpResponse(content, content_type="application/pdf")
-    filename = f"zayavka_{order.number or order.pk}.pdf"
-    response["Content-Disposition"] = f'inline; filename="{filename}"'
-    return response
 
 
 @login_required
@@ -121,15 +163,10 @@ def report_pdf(request):
     if date_to:
         orders = orders.filter(document_date__lte=date_to)
 
-    if HTML is None:
-        return HttpResponse(
-            "WeasyPrint не установлен. Не удаётся сформировать отчёт.",
-            status=500,
-        )
-
     total_sum = sum(o.total for o in orders)
 
-    html_string = render_to_string(
+    return _pdf_response_or_fallback(
+        request,
         "reports/report_pdf.html",
         {
             "orders": orders,
@@ -139,15 +176,5 @@ def report_pdf(request):
             "date_to": date_to,
             "generated": date.today().isoformat(),
         },
+        "report.pdf",
     )
-
-    with tempfile.NamedTemporaryFile(suffix=".pdf") as tmp:
-        HTML(string=html_string, base_url=request.build_absolute_uri("/")).write_pdf(
-            tmp.name
-        )
-        tmp.seek(0)
-        content = tmp.read()
-
-    response = HttpResponse(content, content_type="application/pdf")
-    response["Content-Disposition"] = 'inline; filename="report.pdf"'
-    return response
